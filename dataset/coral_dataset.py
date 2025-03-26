@@ -1,4 +1,5 @@
 import os
+from icecream import ic
 import torch
 import torch.nn as nn
 import torchvision
@@ -16,18 +17,26 @@ class CoralDataset(Dataset):
         self.mask_dir = mask_dir
 
     def __getitem__(self, idx):
+        idx += 1
         img = get_coral_image(self.img_dir, idx)
+
         if(img.shape[-1] == 4):
             img = color.rgba2rgb(img)
-        mask, label = generate_mask_and_label(self.mask_dir, idx)
-         # Create a target mask filled with 255 (ignore)
-        target_mask = np.full(mask.shape, 255, dtype=np.uint8)
-        target_mask[mask == 1] = label                 # Apply label only in region
 
+        img = torch.from_numpy(img).float().permute(2, 0, 1) / 255.0 # permute to match expected format [B, H, W, C] -> [B, C, H, W]
+
+        mask = generate_mask_and_label(self.mask_dir, idx)
+        mask = torch.from_numpy(mask).long()
+
+        if mask.ndim == 3:
+            mask = mask.squeeze(-1)  # Remove channel dimension if present
+
+         # Create a target mask filled with 255 (ignore)
+
+        ic(img.shape)
+        ic(mask.shape)
         # Convert to tensors
-        img = torch.tensor(img, dtype=torch.float32).permute(2, 0, 1) / 255.0
-        target_mask = torch.tensor(target_mask, dtype=torch.long)
-        return img, target_mask 
+        return img, mask 
 
     def __len__(self):
         return len(os.listdir(f"{self.img_dir}"))

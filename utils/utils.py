@@ -1,7 +1,7 @@
 import os
 from icecream import ic
 import numpy as np
-from skimage import io, filters
+from skimage import io, filters, color
 
 def get_coral_image(mask_dir, idx):
     assert (mask_dir == "data/images-flouro" or mask_dir == "data/images-non-flouro")
@@ -10,6 +10,10 @@ def get_coral_image(mask_dir, idx):
 
     return img
 
+def find_color(img, rgb, tol=10):
+    return np.all(np.abs(img[:, :, :3] - np.array(rgb)) <= tol, axis=-1)
+
+
 def generate_mask_and_label(mask_dir, idx):
     '''
     Takes a painted image (drawn over with rgb to identify regions)
@@ -17,37 +21,16 @@ def generate_mask_and_label(mask_dir, idx):
     (red - dead, green - healthy, blue - bleached)
     '''
     masked = io.imread(f"{mask_dir}/{idx}.png")
-    red = (
-        (masked[:, :, 0] == 255) &   # R
-        (masked[:, :, 1] == 0) &   # G
-        (masked[:, :, 2] == 0)   # B
-        # Alpha is ignored (don't care)
-    )
-    green = (
-        (masked[:, :, 0] == 0) &   # r
-        (masked[:, :, 1] == 255) &   # g
-        (masked[:, :, 2] == 0)   # b
-        # alpha is ignored (don't care)
-    )
-
-    blue = (
-        (masked[:, :, 0] == 0) &   # r
-        (masked[:, :, 1] == 0) &   # g
-        (masked[:, :, 2] == 255)   # b
-        # alpha is ignored (don't care)
-    )
+    if(masked.shape[-1] == 4):
+        masked = color.rgba2rgb(masked)
+    target_mask = np.full(masked.shape[:2], 255, dtype=np.uint8)
+    red = find_color(masked, (255, 0,0))
+    yellow = find_color(masked, (255, 255,0))
+    blue = find_color(masked, (0, 0,255))
     
-    label = 0
-    if (True in red):
-        label = 1
-        masked[~red] = [0,0,0,0]
-    elif True in green:
-        label = 2
-        masked[~green] = [0,0,0,0]
-    elif True in blue:
-        label = 3
-        masked[~blue] =  [0,0,0,0]
-    else:
-        raise(AssertionError("NO TRUE COLORS IN PAINTED IMAGE"))
-    return masked, label
+    target_mask[red] = 0
+    target_mask[yellow] = 1
+    target_mask[blue] = 2
+    target_mask[~(red|yellow|blue)] = 255
 
+    return target_mask
