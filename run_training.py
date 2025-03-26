@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 
 from train.train_model import train_model
+from visualize_predictions import visualize_prediction
 from models.segmentation_model import UNet
 from dataset.coral_dataset import CoralDataset
 def main():
@@ -27,5 +28,7 @@ def main():
     criterion = nn.CrossEntropyLoss(ignore_index=255)
 
     train_model(model, dataloader, optimizer, criterion)
+    for i in range(3):
+        visualize_prediction(model, dataset, device, i)
 
 main()
