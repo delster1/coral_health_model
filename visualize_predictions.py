@@ -8,11 +8,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 
-def visualize_prediction(model, dataset, device, index):
+def visualize_prediction(model, dataset, device, index, outputs):
     model.eval()
     image, mask = dataset[index]
     with torch.no_grad():
-        pred = model(image.unsqueeze(0).to(device)).squeeze(0).argmax(0).cpu().numpy()
+        preds = torch.argmax(outputs, dim=1)
 
     fig, ax = plt.subplots(1, 3, figsize=(12, 4))
     ax[0].imshow(image.permute(1, 2, 0))

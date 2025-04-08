@@ -2,6 +2,7 @@ from icecream import ic
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -19,9 +20,10 @@ def train_model(model, dataloader, optimizer, criterion, epochs=10):
         H - Height
         W - Width
     '''
+    outputs = None
     num_epochs = 10
     for epoch in range(num_epochs):
-        ic(model.train())
+        # ic(model.train())
         running_loss = 0.0
 
         for images, masks in tqdm(dataloader, desc=f"Epoch {epoch+1}/{num_epochs}"):
@@ -30,6 +32,11 @@ def train_model(model, dataloader, optimizer, criterion, epochs=10):
 
             # Forward
             outputs = model(images)                   # Shape: (B, C, H, W)
+            with torch.no_grad():
+                ic("output stats:", outputs.min().item(), outputs.max().item(), outputs.mean().item())
+            preds = torch.argmax(outputs, dim=1)
+
+            plt.imshow(preds[0].cpu().numpy(), cmap='viridis')
 
             # Loss
             loss = criterion(outputs, masks)
@@ -41,6 +48,9 @@ def train_model(model, dataloader, optimizer, criterion, epochs=10):
 
             running_loss += loss.item()
 
+
         avg_loss = running_loss / len(dataloader)
         print(f"Epoch {epoch+1}, Loss: {avg_loss:.4f}")
+        if outputs is not None:
+            return outputs
 

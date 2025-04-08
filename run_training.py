@@ -23,12 +23,12 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model = UNet().to(device)
-    ic(model)
+    # ic(model)
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     criterion = nn.CrossEntropyLoss(ignore_index=255)
 
-    train_model(model, dataloader, optimizer, criterion)
+    outputs = train_model(model, dataloader, optimizer, criterion)
     for i in range(3):
-        visualize_prediction(model, dataset, device, i)
+        visualize_prediction(model, dataset, device, i, outputs)
 
 main()

@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from skimage import io, filters, color
 from skimage.segmentation import watershed
-from utils.utils import generate_mask_and_label, get_coral_image
+from utils.utils import generate_mask_and_label, get_coral_image, rgba2rgb_safe
 
 class CoralDataset(Dataset):
     def __init__(self, img_dir, mask_dir):
@@ -21,9 +21,14 @@ class CoralDataset(Dataset):
         img = get_coral_image(self.img_dir, idx)
 
         if(img.shape[-1] == 4):
-            img = color.rgba2rgb(img)
+            img = rgba2rgb_safe(img)
 
-        img = torch.from_numpy(img).float().permute(2, 0, 1) / 255.0 # permute to match expected format [B, H, W, C] -> [B, C, H, W]
+
+        img = torch.from_numpy(img).float() / 255.0
+        img = img.permute(2,0,1)
+
+        ic("img stats:", img.min().item(), img.max().item(), img.mean().item())
+
 
         mask = generate_mask_and_label(self.mask_dir, idx)
         mask = torch.from_numpy(mask).long()
@@ -34,7 +39,8 @@ class CoralDataset(Dataset):
          # Create a target mask filled with 255 (ignore)
 
         ic(img.shape)
-        ic(mask.shape)
+        # ic(img)
+        # ic(mask.shape)
         # Convert to tensors
         return img, mask 
 
