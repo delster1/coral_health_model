@@ -15,10 +15,10 @@ from dataset.coral_dataset import CoralDataset
 def main():
     print("HELLOOO")
     dataset = CoralDataset(
-    img_dir="data/aug_images-flouro",
-    mask_dir="data/aug_masks-flouro",
+    img_dir="data/images-flouro",
+    mask_dir="data/masks-flouro",
     
-)
+    )
 
     dataloader = DataLoader(dataset, batch_size=4, shuffle=True)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

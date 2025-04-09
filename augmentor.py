@@ -12,8 +12,8 @@ from utils.utils import generate_mask_and_label, rgba2rgb_safe
 # Settings
 img_dir = "data/images-flouro"
 mask_dir = "data/masks-flouro"
-out_img_dir = "data/aug_images-flouro"
-out_mask_dir = "data/aug_masks-flouro"
+out_img_dir = "data/out_images-flouro"
+out_mask_dir = "data/out_masks-flouro"
 N_AUGS = 5  # How many augmentations per image?
 
 os.makedirs(out_img_dir, exist_ok=True)
@@ -54,12 +54,8 @@ for idx in tqdm(range(1, len(os.listdir(img_dir)) + 1)):
     if base_mask.ndim == 3:
         base_mask = base_mask.squeeze(-1)
 
-    for aug_idx in range(N_AUGS):
-        img_aug, mask_aug = apply_augment(base_img.clone(), base_mask.clone())
-        img_pil = TF.to_pil_image(img_aug)
-        mask_pil = Image.fromarray(mask_aug.byte().numpy())
 
-        save_name = f"{idx:04d}_{aug_idx}.png"
-        img_pil.save(os.path.join(out_img_dir, save_name))
-        mask_pil.save(os.path.join(out_mask_dir, save_name))
+    save_name = f"{idx}.png"
+    img_pil.save(os.path.join(out_img_dir, save_name))
+    mask_pil.save(os.path.join(out_mask_dir, save_name))
 

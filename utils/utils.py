@@ -13,7 +13,7 @@ def rgba2rgb_safe(img):
 
 
 def get_coral_image(mask_dir, idx):
-    assert (mask_dir == "data/aug_images-flouro" or mask_dir == "data/images-non-flouro")
+    # assert (mask_dir == "data/aug_images-flouro" or mask_dir == "data/images-non-flouro")
     
     img = io.imread(f"{mask_dir}/{idx}.png") 
 

@@ -21,7 +21,7 @@ def train_model(model, dataloader, optimizer, criterion, epochs=10):
         W - Width
     '''
     outputs = None
-    num_epochs = 30
+    num_epochs = 10
     for epoch in range(num_epochs):
         # ic(model.train())
         running_loss = 0.0
@@ -41,6 +41,7 @@ def train_model(model, dataloader, optimizer, criterion, epochs=10):
             plt.imshow(preds[0].cpu().numpy(), cmap='viridis')
 
             # Loss
+            masks = masks.squeeze(1).long()
             loss = criterion(outputs, masks)
 
             # Backward and optimize

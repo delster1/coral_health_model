@@ -37,6 +37,9 @@ class CoralDataset(Dataset):
 
         if img.shape[-1] == 4:
             img = rgba2rgb_safe(img)
+        if mask_np.shape[-1] == 4:
+            mask_np = rgba2rgb_safe(mask_np)
+
 
         img = torch.from_numpy(img).float() / 255.0
         img = img.permute(2, 0, 1)
@@ -47,6 +50,9 @@ class CoralDataset(Dataset):
 
         if mask.ndim == 3:
             mask = mask.squeeze(-1)  # Remove channel dimension if present
+
+        ic("img shape: ",  img.shape)
+        ic("mask shape: ",mask.shape)
 
         if self.augment:
             if random.random() > 0.5:
