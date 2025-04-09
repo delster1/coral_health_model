@@ -1,7 +1,8 @@
 import os
 from icecream import ic
 import numpy as np
-from skimage import io, filters, color, img_as_ubyte
+from skimage import io, filters, color, img_as_ubyte 
+from skimage.io import imread
 
 def rgba2rgb_safe(img):
     rgb = img[..., :3].astype(float)
@@ -41,44 +42,24 @@ def generate_mask_and_label(mask_dir, idx):
     Returns the masked version and the label classification 
     (red - dead, green - healthy, blue - bleached)
     '''
-    # ic(get_size(mask_dir))
 
-    masked = io.imread(f"{mask_dir}/{idx}.png")
-    if(masked.shape[-1] == 4):
-        masked = img_as_ubyte(masked)
-    non_black_pixels = np.where((masked[:, :, :3] != [0, 0, 0]).any(axis=2))
-    # ic(non_black_pixels)
-    rgb_vals = masked[:, :, :3][(masked[:, :, :3] != [0, 0, 0]).any(axis=2)]
-    # ic(np.unique(rgb_vals, axis=0))
+    masked = imread(f"{mask_dir}/{idx}.png")
 
+    if masked.shape[-1] == 4:
+        masked = masked[:, :, :3]  # strip alpha
+
+    # Initialize with ignore index (255)
     target_mask = np.full(masked.shape[:2], 255, dtype=np.uint8)
-    red    = find_color(masked, (195, 75, 75))    # Red = dead
-    yellow = find_color(masked, (195, 195, 75))  # Yellow = healing
-    blue   = find_color(masked, (75, 75, 195))    # Blue = bleached
 
-    # plt.imshow(red, cmap='Reds')
-    # plt.title("Red matched mask")
-    # plt.show()
-    #
-    # plt.imshow(yellow, cmap='Reds')
-    # plt.title("yell matched mask")
-    # plt.show()
-    #
-    # plt.imshow(blue, cmap='Reds')
-    # plt.title("blu matched mask")
-    # plt.show()
-    #
-    # ic(red)
-    # ic(yellow)
-    # ic(blue)
-    # ic(red.all() == yellow.all() and yellow.all() == blue.all())
 
-    target_mask[red] = 0
-    target_mask[yellow] = 1 
-    target_mask[blue] = 2
+    red    = find_color(masked, (195, 75, 75))     # dead
+    yellow = find_color(masked, (195, 195, 75))     # healing
+    blue   = find_color(masked, (75, 75, 195))      # bleached
 
-    pixels = masked[:, :, :3].reshape(-1, 3)
-    # ic(np.unique(pixels, axis=0))
+    # Assign labels only to known coral regions
+    target_mask[red]    = 0
+    target_mask[yellow] = 1
+    target_mask[blue]   = 2
 
-    assert (red != False).any(), "No labeled pixels found — target_mask is all 255!"
+    assert (target_mask != 255).any(), "No labeled pixels found — target_mask is all 255!"
     return target_mask

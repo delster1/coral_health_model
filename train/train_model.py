@@ -21,13 +21,15 @@ def train_model(model, dataloader, optimizer, criterion, epochs=10):
         W - Width
     '''
     outputs = None
-    num_epochs = 10
+    num_epochs = 30
     for epoch in range(num_epochs):
         # ic(model.train())
         running_loss = 0.0
 
         for images, masks in tqdm(dataloader, desc=f"Epoch {epoch+1}/{num_epochs}"):
             images = images.to(device)                # Shape: (B, 3, H, W)
+            unique_vals = torch.unique(masks)
+            print("Mask Values: ", unique_vals)
             masks = masks.to(device).long()           # Shape: (B, H, W)
 
             # Forward
@@ -51,6 +53,6 @@ def train_model(model, dataloader, optimizer, criterion, epochs=10):
 
         avg_loss = running_loss / len(dataloader)
         print(f"Epoch {epoch+1}, Loss: {avg_loss:.4f}")
-        if outputs is not None:
+        if epoch == num_epochs - 1:
             return outputs
 

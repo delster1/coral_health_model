@@ -29,6 +29,6 @@ def main():
 
     outputs = train_model(model, dataloader, optimizer, criterion)
     for i in range(3):
-        visualize_prediction(model, dataset, device, i, outputs)
+        visualize_prediction(model, dataset, device, i)
 
 main()
