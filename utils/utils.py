@@ -13,7 +13,7 @@ def rgba2rgb_safe(img):
 
 
 def get_coral_image(mask_dir, idx):
-    assert (mask_dir == "data/images-flouro" or mask_dir == "data/images-non-flouro")
+    assert (mask_dir == "data/aug_images-flouro" or mask_dir == "data/images-non-flouro")
     
     img = io.imread(f"{mask_dir}/{idx}.png") 
 
@@ -63,3 +63,4 @@ def generate_mask_and_label(mask_dir, idx):
 
     assert (target_mask != 255).any(), "No labeled pixels found — target_mask is all 255!"
     return target_mask
+

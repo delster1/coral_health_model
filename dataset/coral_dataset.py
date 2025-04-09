@@ -1,4 +1,8 @@
 import os
+import random
+import torchvision.transforms.functional as TF
+from torchvision.transforms import InterpolationMode
+from PIL import Image
 from icecream import ic
 import torch
 import torch.nn as nn
@@ -9,45 +13,62 @@ import numpy as np
 import matplotlib.pyplot as plt
 from skimage import io, filters, color
 from skimage.segmentation import watershed
+from skimage.io import imread
 from utils.utils import generate_mask_and_label, get_coral_image, rgba2rgb_safe
 
 class CoralDataset(Dataset):
-    def __init__(self, img_dir, mask_dir):
+    def __init__(self, img_dir, mask_dir, augment=False):
         self.img_dir = img_dir
         self.mask_dir = mask_dir
+        self.files = sorted(os.listdir(img_dir))  # Ensure matching order
+        self.augment = augment
 
     def __getitem__(self, idx):
-        idx += 1
-        img = get_coral_image(self.img_dir, idx)
+        # idx += 1
+        # img = get_coral_image(self.img_dir, idx)
 
-        if(img.shape[-1] == 4):
+        img_path = os.path.join(self.img_dir, self.files[idx])
+        mask_path = os.path.join(self.mask_dir, self.files[idx])
+
+        img = imread(img_path)
+
+        # Load mask using skimage.io
+        mask_np = imread(mask_path)
+
+        if img.shape[-1] == 4:
             img = rgba2rgb_safe(img)
 
-
         img = torch.from_numpy(img).float() / 255.0
-        img = img.permute(2,0,1)
+        img = img.permute(2, 0, 1)
 
         ic("img stats:", img.min().item(), img.max().item(), img.mean().item())
 
-
-        mask = generate_mask_and_label(self.mask_dir, idx)
-        mask = torch.from_numpy(mask).long()
+        mask = torch.from_numpy(mask_np).long()
 
         if mask.ndim == 3:
             mask = mask.squeeze(-1)  # Remove channel dimension if present
 
-         # Create a target mask filled with 255 (ignore)
+        if self.augment:
+            if random.random() > 0.5:
+                img = TF.hflip(img)
+                mask = TF.hflip(mask)
 
-        ic(img.shape)
-        # ic(img)
-        # ic(mask.shape)
-        # Convert to tensors
-        return img, mask 
+            if random.random() > 0.5:
+                img = TF.vflip(img)
+                mask = TF.vflip(mask)
 
+            if random.random() > 0.5:
+                angle = random.uniform(-30, 30)
+                img = TF.rotate(img, angle, interpolation=InterpolationMode.BILINEAR)
+                mask = mask.unsqueeze(0)  # Add dummy channel for rotation
+                mask = TF.rotate(mask, angle, interpolation=InterpolationMode.NEAREST)
+                mask = mask.squeeze(0)    # Remove dummy channel after rotation
+
+        return img, mask
     def __len__(self):
         return len(os.listdir(f"{self.img_dir}"))
 
 # Create a dataset instance and data loader
-dataset = CoralDataset('data/images-flouro', 'data/masks-flouro')
+dataset = CoralDataset('data/aug_images-flouro', 'data/aug_masks-flouro')
 dataloader = DataLoader(dataset, batch_size=4, shuffle=True)
 
