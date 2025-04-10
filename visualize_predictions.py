@@ -20,7 +20,7 @@ def visualize_prediction(model, dataset, device, index):
     ax[0].set_title("Image")
     ax[1].imshow(mask, cmap="tab10", vmin=0, vmax=3)
     ax[1].set_title("Ground Truth")
-    ax[2].imshow(preds, cmap="tab10", vmin=0, vmax=2)
+    ax[2].imshow(preds, cmap="tab10", vmin=0, vmax=3)
     print(f"Unique Prediction Values, {np.unique(preds)}")
     ax[2].set_title("Prediction")
 

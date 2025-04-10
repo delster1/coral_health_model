@@ -21,7 +21,7 @@ def train_model(model, dataloader, optimizer, criterion, epochs=10):
         W - Width
     '''
     outputs = None
-    num_epochs = 10
+    num_epochs = 3
     for epoch in range(num_epochs):
         # ic(model.train())
         running_loss = 0.0
@@ -54,6 +54,4 @@ def train_model(model, dataloader, optimizer, criterion, epochs=10):
 
         avg_loss = running_loss / len(dataloader)
         print(f"Epoch {epoch+1}, Loss: {avg_loss:.4f}")
-        if epoch == num_epochs - 1:
-            return outputs
 

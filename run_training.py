@@ -28,7 +28,7 @@ def main():
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     criterion = nn.CrossEntropyLoss(ignore_index=255)
 
-    outputs = train_model(model, dataloader, optimizer, criterion)
+    train_model(model, dataloader, optimizer, criterion)
     for i in range(3):
         visualize_prediction(model, dataset, device, i)
 
