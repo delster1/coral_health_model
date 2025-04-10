@@ -73,6 +73,7 @@ class CoralDataset(Dataset):
                 mask = mask.squeeze(0)    # Remove dummy channel after rotation
 
         return img, mask
+
     def __len__(self):
         return len(os.listdir(f"{self.img_dir}"))
 

@@ -2,6 +2,7 @@ import os
 import torch
 import random
 from torchvision.transforms import functional as TF
+from skimage.io import imread
 from torchvision.transforms import InterpolationMode
 from PIL import Image
 from tqdm import tqdm
@@ -11,18 +12,19 @@ from utils.utils import generate_mask_and_label, rgba2rgb_safe
 
 AUGMENT = False
 # ---------------- Settings ---------------- #
-IMG_DIR = "new_data/images-flouro"
-MASK_DIR = "new_data/masks-flouro"
-OUT_IMG_DIR = "new_data/out_images-flouro"
-OUT_MASK_DIR = "new_data/out_masks-flouro"
+IMG_DIR = "data/images-flouro"
+MASK_DIR = "data/masks-flouro"
+OUT_IMG_DIR = "data/aug_images-flouro"
+OUT_MASK_DIR = "data/aug_masks-flouro"
 N_AUGS = 5  # How many augmentations per image?
+N_IMAGES = os.listdir(IMG_DIR)
 
 os.makedirs(OUT_IMG_DIR, exist_ok=True)
 os.makedirs(OUT_MASK_DIR, exist_ok=True)
 
 # ---------------- Image Functions ---------------- #
 def load_image(img_dir, idx):
-    img = get_coral_image(img_dir, idx)
+    img = imread(os.path.join(IMG_DIR, N_IMAGES[idx]))
     if img.shape[-1] == 4:
         img = rgba2rgb_safe(img)
     img_tensor = torch.from_numpy(img).float() / 255.0
@@ -72,7 +74,8 @@ def augment_mask(mask_tensor):
 
 # ---------------- Workflow Functions ---------------- #
 def process_single_image_mask_pair(idx, n_augs=N_AUGS):
-    img = load_image(IMG_DIR, idx)
+    img_path = os.path.join(IMG_DIR, IMG_DIR[idx])
+    img = imread(img_path)
     mask = load_mask(MASK_DIR, idx)
 
     # Save original
