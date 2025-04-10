@@ -1,4 +1,5 @@
 import os
+import torch
 import cv2
 from icecream import ic
 import numpy as np
@@ -99,3 +100,27 @@ def generate_mask_and_label(mask_dir, idx):
     assert (target_mask != 255).any(), "No labeled pixels found — mask may be too dark or empty!"
     target_mask = remove_small_regions(target_mask)
     return target_mask
+
+
+def get_class_frequencies(mask_dir, num_classes=3, ignore_index=255):
+    class_counts = np.zeros(num_classes, dtype=np.int64)
+
+    for file in sorted(os.listdir(mask_dir)):
+        if not file.endswith(('.png', '.jpg')):
+            continue
+        mask = imread(os.path.join(mask_dir, file))
+
+        if mask.ndim == 3:
+            mask = mask[:, :, 0]  # if RGB mask, take one channel
+
+        for cls in range(num_classes):
+            class_counts[cls] += np.sum(mask == cls)
+
+    return class_counts
+
+def compute_class_weights(class_counts, epsilon=1e-6):
+    total = class_counts.sum()
+    weights = total / (class_counts + epsilon)  # prevent div by 0
+    weights = weights / weights.sum()           # normalize to sum=1 (optional)
+    return torch.tensor(weights, dtype=torch.float32)
+
