@@ -30,6 +30,8 @@ class CoralDataset(Dataset):
         img_path = os.path.join(self.img_dir, self.files[idx])
         mask_path = os.path.join(self.mask_dir, self.files[idx])
 
+        ic(img_path)
+        ic(mask_path)
         img = imread(img_path)
 
         # Load mask using skimage.io
@@ -76,5 +78,5 @@ class CoralDataset(Dataset):
 
 # Create a dataset instance and data loader
 dataset = CoralDataset('data/aug_images-flouro', 'data/aug_masks-flouro')
-dataloader = DataLoader(dataset, batch_size=4, shuffle=True)
+dataloader = DataLoader(dataset, batch_size=10, shuffle=True)
 

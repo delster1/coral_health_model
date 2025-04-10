@@ -5,6 +5,7 @@ import torch.optim as optim
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 num_classes = 3  # e.g., bleached, healing, dead (exclude 255 for ignore)
 ignore_index = 255
@@ -12,7 +13,7 @@ ignore_index = 255
 # Loss and optimizer
 criterion = nn.CrossEntropyLoss(ignore_index=ignore_index)
 
-def train_model(model, dataloader, optimizer, criterion, epochs=10):
+def train_model(model, dataloader, optimizer, criterion):
     '''
     Tensor Shape: 
         B - Batch size - # images at once
@@ -22,7 +23,7 @@ def train_model(model, dataloader, optimizer, criterion, epochs=10):
     '''
     outputs = None
     num_epochs = 3
-    for epoch in range(num_epochs):
+    for epoch in range(10):
         # ic(model.train())
         running_loss = 0.0
 
