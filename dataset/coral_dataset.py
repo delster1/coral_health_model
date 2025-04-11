@@ -28,19 +28,15 @@ class CoralDataset(Dataset):
         # img = get_coral_image(self.img_dir, idx)
 
         img_path = os.path.join(self.img_dir, self.files[idx])
-        mask_path = os.path.join(self.mask_dir, self.files[idx])
 
         ic(img_path)
-        ic(mask_path)
         img = imread(img_path)
 
         # Load mask using skimage.io
-        mask_np = imread(mask_path)
+        mask = generate_mask_and_label(self.mask_dir, idx)
 
         if img.shape[-1] == 4:
             img = rgba2rgb_safe(img)
-        if mask_np.shape[-1] == 4:
-            mask_np = rgba2rgb_safe(mask_np)
 
 
         img = torch.from_numpy(img).float() / 255.0
@@ -48,10 +44,6 @@ class CoralDataset(Dataset):
 
         ic("img stats:", img.min().item(), img.max().item(), img.mean().item())
 
-        mask = torch.from_numpy(mask_np).long()
-
-        if mask.ndim == 3:
-            mask = mask.squeeze(-1)  # Remove channel dimension if present
 
         ic("img shape: ",  img.shape)
         ic("mask shape: ",mask.shape)
@@ -78,6 +70,6 @@ class CoralDataset(Dataset):
         return len(os.listdir(f"{self.img_dir}"))
 
 # Create a dataset instance and data loader
-dataset = CoralDataset('data/aug_images-flouro', 'data/aug_masks-flouro')
+dataset = CoralDataset('data/images-flouro', 'data/masks-flouro')
 dataloader = DataLoader(dataset, batch_size=10, shuffle=True)
 

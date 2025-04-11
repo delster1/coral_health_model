@@ -26,7 +26,13 @@ class UNet(nn.Module):
         self.down2 = DoubleConv(64, 128)
         self.pool2 = nn.MaxPool2d(2)
 
-        self.bottleneck = DoubleConv(128, 256)
+        self.down3 = DoubleConv(128, 256)
+        self.pool3 = nn.MaxPool2d(2)
+
+        self.bottleneck = DoubleConv(256, 512)
+
+        self.up3 = nn.ConvTranspose2d(512, 256, kernel_size=2, stride=2)
+        self.upconv3 = DoubleConv(512, 256)
 
         self.up2 = nn.ConvTranspose2d(256, 128, kernel_size=2, stride=2)
         self.upconv2 = DoubleConv(256, 128)
@@ -44,15 +50,22 @@ class UNet(nn.Module):
         x3 = self.down2(x2)    # -> 128
         x4 = self.pool2(x3)
 
-        x5 = self.bottleneck(x4)  # -> 256
+        x5 = self.down3(x4)
+        x6 = self.pool3(x5)
 
-        # Up path
-        x6 = self.up2(x5)
-        x6 = torch.cat([x6, x3], dim=1)
-        x7 = self.upconv2(x6)
+        x7 = self.bottleneck(x6)  # -> 256
 
-        x8 = self.up1(x7)
-        x8 = torch.cat([x8, x1], dim=1)
-        x9 = self.upconv1(x8)
+        x8 = self.up3(x7)
+        x8 = torch.cat([x8, x5], dim=1)
+        x9 = self.upconv3(x8)
 
-        return self.out(x9)
+        x10 = self.up2(x9)
+        x10 = torch.cat([x10, x3], dim=1)
+        x11 = self.upconv2(x10)
+
+        x12 = self.up1(x11)
+        x12 = torch.cat([x12, x1], dim=1)
+        x13 = self.upconv1(x12)
+
+        return self.out(x13)
+

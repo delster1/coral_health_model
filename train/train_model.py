@@ -22,8 +22,8 @@ def train_model(model, dataloader, optimizer, criterion):
         W - Width
     '''
     outputs = None
-    num_epochs = 3
-    for epoch in range(10):
+    num_epochs = 30
+    for epoch in range(num_epochs):
         # ic(model.train())
         running_loss = 0.0
 

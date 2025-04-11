@@ -24,6 +24,7 @@ os.makedirs(OUT_MASK_DIR, exist_ok=True)
 
 # ---------------- Image Functions ---------------- #
 def load_image(img_dir, idx):
+    print("IMG PATHHHH:   ", os.path.join(IMG_DIR, N_IMAGES[idx]))
     img = imread(os.path.join(IMG_DIR, N_IMAGES[idx]))
     if img.shape[-1] == 4:
         img = rgba2rgb_safe(img)
@@ -48,10 +49,7 @@ def augment_image(img_tensor):
 
 # ---------------- Mask Functions ---------------- #
 def load_mask(mask_dir, idx):
-    mask_np = generate_mask_and_label(mask_dir, idx)
-    mask_tensor = torch.from_numpy(mask_np).long()
-    if mask_tensor.ndim == 3:
-        mask_tensor = mask_tensor.squeeze(-1)
+    mask_tensor = generate_mask_and_label(mask_dir, idx)
     return mask_tensor
 
 def save_mask(mask_tensor, save_name, out_mask_dir):
@@ -74,7 +72,7 @@ def augment_mask(mask_tensor):
 
 # ---------------- Workflow Functions ---------------- #
 def process_single_image_mask_pair(idx, n_augs=N_AUGS):
-    img_path = os.path.join(IMG_DIR, IMG_DIR[idx])
+    img_path = os.path.join(IMG_DIR, N_IMAGES[idx])
     img = imread(img_path)
     mask = load_mask(MASK_DIR, idx)
 

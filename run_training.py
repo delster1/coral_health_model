@@ -7,8 +7,8 @@ from torchvision import transforms
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
-
-from train.train_model import ignore_index, train_model
+import random
+from train.train_model import train_model
 from visualize_predictions import visualize_prediction
 from models.segmentation_model import UNet
 from utils.utils import *
@@ -20,15 +20,15 @@ class ModelHyperparams:
         self.num_epochs = 15
         self.ignore_index = 255
         self.class_weights = torch.tensor([1.0, 1.5, 2.0])
-        self.weight_decay =0
+        self.weight_decay = 1e-5
 
 def main():
     cfg = ModelHyperparams()
 
     print("HELLOOO")
     dataset = CoralDataset(
-    img_dir="data/images-flouro",
-    mask_dir="data/masks-flouro",
+    img_dir="data/aug_images-flouro",
+    mask_dir="data/aug_masks-flouro",
     
     )
 
@@ -43,10 +43,10 @@ def main():
      
     print(cfg.class_weights)
 
-    criterion = nn.CrossEntropyLoss(ignore_index=cfg.ignore_index, weight=cfg.class_weights)
-
+    criterion = nn.CrossEntropyLoss(ignore_index=255, weight=cfg.class_weights.to(device))
     train_model(model, dataloader, optimizer, criterion)
-    for i in range(3):
-        visualize_prediction(model, dataset, device, i)
+    for i in range(5):
+        num = random.randint(1, len(dataset))
+        visualize_prediction(model, dataset, device, num)
 
 main()
