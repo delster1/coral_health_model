@@ -1,4 +1,5 @@
 from icecream import ic
+import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -22,7 +23,7 @@ def train_model(model, dataloader, optimizer, criterion):
         W - Width
     '''
     outputs = None
-    num_epochs = 30
+    num_epochs = 90
     for epoch in range(num_epochs):
         # ic(model.train())
         running_loss = 0.0
@@ -55,4 +56,6 @@ def train_model(model, dataloader, optimizer, criterion):
 
         avg_loss = running_loss / len(dataloader)
         print(f"Epoch {epoch+1}, Loss: {avg_loss:.4f}")
+        os.makedirs("checkpoints", exist_ok=True)
+        torch.save(model.state_dict(), "checkpoints/unet_epoch10.pth")
 

@@ -29,6 +29,7 @@ def main():
     dataset = CoralDataset(
     img_dir="data/aug_images-flouro",
     mask_dir="data/aug_masks-flouro",
+    augment=True,
     
     )
 
@@ -45,7 +46,7 @@ def main():
 
     criterion = nn.CrossEntropyLoss(ignore_index=255, weight=cfg.class_weights.to(device))
     train_model(model, dataloader, optimizer, criterion)
-    for i in range(5):
+    for i in range(10):
         num = random.randint(1, len(dataset))
         visualize_prediction(model, dataset, device, num)
 

@@ -1,10 +1,16 @@
 import os
+from PIL import Image
 import torch
 import cv2
 from icecream import ic
 import numpy as np
 from skimage import io, filters, color, img_as_ubyte 
 from skimage.io import imread
+
+def save_prediction_mask(mask_tensor, save_path):
+    mask_np = mask_tensor.cpu().numpy().astype(np.uint8)
+    mask_img = Image.fromarray(mask_np)
+    mask_img.save(save_path)
 
 def rgba2rgb_safe(img):
     rgb = img[..., :3].astype(float)
@@ -70,7 +76,7 @@ def generate_mask_and_label(mask_dir, idx):
     masked = imread(mask_path)
 
     if masked.shape[-1] == 4:
-        masked = rgba2rgb_safe(mask_np)
+        masked = rgba2rgb_safe(masked)
 
     mask = torch.from_numpy(masked).long()
 

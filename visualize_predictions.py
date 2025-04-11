@@ -8,6 +8,7 @@ from torchvision import transforms
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
+from utils.utils import save_prediction_mask
 
 def visualize_prediction(model, dataset, device, index): 
     model.eval()
@@ -15,6 +16,9 @@ def visualize_prediction(model, dataset, device, index):
     with torch.no_grad():
         preds = model(image.unsqueeze(0).to(device)).squeeze(0).argmax(0).cpu().numpy()
 
+    for i in range(preds.shape[0]):
+        save_prediction_mask(preds[i], f"outputs/pred_img{i}.png")  
+    
     fig, ax = plt.subplots(1, 3, figsize=(12, 4))
     ax[0].imshow(image.permute(1, 2, 0))
     ax[0].set_title("Image")
@@ -27,6 +31,7 @@ def visualize_prediction(model, dataset, device, index):
     label_counts = Counter()
 
     for i in range(len(dataset)):
+
         _, mask = dataset[i]
         vals, counts = torch.unique(mask, return_counts=True)
         for v, c in zip(vals.tolist(), counts.tolist()):
