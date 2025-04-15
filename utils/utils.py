@@ -7,6 +7,14 @@ import numpy as np
 from skimage import io, filters, color, img_as_ubyte 
 from skimage.io import imread
 
+def clear_output_folder(out_dir):
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
+        return
+    for filename in os.listdir(out_dir):
+        file_path = os.path.join(directory, filename)
+        if os.path.isfile(file_path):
+            os.remove(file_path)
 def save_prediction_mask(mask_tensor, save_path):
     mask_np = mask_tensor.cpu().numpy().astype(np.uint8)
     mask_img = Image.fromarray(mask_np)

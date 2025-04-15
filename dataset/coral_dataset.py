@@ -16,53 +16,46 @@ from skimage.segmentation import watershed
 from skimage.io import imread
 from utils.utils import generate_mask_and_label, get_coral_image, rgba2rgb_safe
 
+
 class CoralDataset(Dataset):
-    def __init__(self, img_dir, mask_dir, augment=False):
+    def __init__(self, img_dir, mask_dir, augment=False, grayscale=False):
         self.img_dir = img_dir
         self.mask_dir = mask_dir
         self.files = sorted(os.listdir(img_dir))  # Ensure matching order
         self.augment = augment
+        self.grayscale = grayscale
 
     def __getitem__(self, idx):
-        # idx += 1
-        # img = get_coral_image(self.img_dir, idx)
-
         img_path = os.path.join(self.img_dir, self.files[idx])
-
         ic(img_path)
-        img = imread(img_path)
 
-        # Load mask using skimage.io
+        if self.grayscale:
+            img = imread(img_path, as_gray=True)  # shape: (H, W)
+            img = torch.from_numpy(img).float().unsqueeze(0) / 255.0  # (1, H, W)
+        else:
+            img = imread(img_path)  # shape: (H, W, C)
+            if img.shape[-1] == 4:
+                img = rgba2rgb_safe(img)
+            img = torch.from_numpy(img).float().permute(2, 0, 1) / 255.0  # (C, H, W)
+
         mask = generate_mask_and_label(self.mask_dir, idx)
 
-        if img.shape[-1] == 4:
-            img = rgba2rgb_safe(img)
-
-
-        img = torch.from_numpy(img).float() / 255.0
-        img = img.permute(2, 0, 1)
-
         ic("img stats:", img.min().item(), img.max().item(), img.mean().item())
-
-
-        ic("img shape: ",  img.shape)
-        ic("mask shape: ",mask.shape)
+        ic("img shape: ", img.shape)
+        ic("mask shape: ", mask.shape)
 
         if self.augment:
             if random.random() > 0.5:
                 img = TF.hflip(img)
                 mask = TF.hflip(mask)
-
             if random.random() > 0.5:
                 img = TF.vflip(img)
                 mask = TF.vflip(mask)
-
             if random.random() > 0.5:
                 angle = random.uniform(-30, 30)
                 img = TF.rotate(img, angle, interpolation=InterpolationMode.BILINEAR)
-                mask = mask.unsqueeze(0)  # Add dummy channel for rotation
-                mask = TF.rotate(mask, angle, interpolation=InterpolationMode.NEAREST)
-                mask = mask.squeeze(0)    # Remove dummy channel after rotation
+                mask = mask.unsqueeze(0)
+                mask = TF.rotate(mask, angle, interpolation=InterpolationMode.NEAREST).squeeze(0)
 
         return img, mask
 

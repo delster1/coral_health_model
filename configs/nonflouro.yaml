@@ -1,0 +1,6 @@
+img_dir: data/aug_images-nonfluoro
+mask_dir: data/aug_masks-nonfluoro
+grayscale: false
+augment: true
+checkpoint: checkpoints/non_fluoro.pt
+

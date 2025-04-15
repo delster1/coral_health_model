@@ -14,7 +14,7 @@ ignore_index = 255
 # Loss and optimizer
 criterion = nn.CrossEntropyLoss(ignore_index=ignore_index)
 
-def train_model(model, dataloader, optimizer, criterion):
+def train_model(model, dataloader, optimizer, criterion, config):
     '''
     Tensor Shape: 
         B - Batch size - # images at once
@@ -57,5 +57,5 @@ def train_model(model, dataloader, optimizer, criterion):
         avg_loss = running_loss / len(dataloader)
         print(f"Epoch {epoch+1}, Loss: {avg_loss:.4f}")
         os.makedirs("checkpoints", exist_ok=True)
-        torch.save(model.state_dict(), "checkpoints/unet_epoch10.pth")
+        torch.save(model.state_dict(), config["checkpoint"])
 

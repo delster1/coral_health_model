@@ -1,0 +1,6 @@
+img_dir: data/aug_images-flouro
+mask_dir: data/aug_masks-flouro
+grayscale: false
+augment: true
+checkpoint: checkpoints/fluoro.pt
+

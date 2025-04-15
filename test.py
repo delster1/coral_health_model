@@ -4,7 +4,7 @@ import numpy as np
 import os
 from skimage import io, filters, color, img_as_ubyte
 import random
-from utils.utils import find_color
+from utils.utils import *
 
 def test_generate_mask(mask_dir):
 
@@ -52,5 +52,4 @@ def test_generate_mask(mask_dir):
     assert (red != False).any(), "No labeled pixels found — target_mask is all 255!"
     return target_mask
 
-test_generate_mask("data/masks-flouro")
-
+clear_output_folder("outputs")
