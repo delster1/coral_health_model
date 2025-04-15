@@ -43,6 +43,11 @@ def main():
     print(args)
 
     config = load_config(args.config)
+
+    first_word = "grayscale-" if config["grayscale"] else "full-color-"
+    out_dir = first_word + config["checkpoint"]
+    config["checkpoint_dir"] = out_dir
+
     hyprparams = ModelHyperparams(config)
 
     ic(f"Running Model with config:\n{config}")

@@ -22,10 +22,14 @@ def train_model(model, dataloader, optimizer, criterion, config):
         H - Height
         W - Width
     '''
+
+    if(os.path.exists(config["checkpoint_path"])):
+        model.load_state_dict(torch.load(config["checkpoint_path"]))
+
     outputs = None
     num_epochs = 90
     for epoch in range(num_epochs):
-        # ic(model.train())
+        ic(model.train())
         running_loss = 0.0
 
         for images, masks in tqdm(dataloader, desc=f"Epoch {epoch+1}/{num_epochs}"):
@@ -57,5 +61,5 @@ def train_model(model, dataloader, optimizer, criterion, config):
         avg_loss = running_loss / len(dataloader)
         print(f"Epoch {epoch+1}, Loss: {avg_loss:.4f}")
         os.makedirs("checkpoints", exist_ok=True)
-        torch.save(model.state_dict(), config["checkpoint"])
+        torch.save(model.state_dict(), config["checkpoint_dir"])
 
