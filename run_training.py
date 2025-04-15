@@ -46,7 +46,7 @@ def main():
 
     first_word = "grayscale-" if config["grayscale"] else "full-color-"
     out_dir = first_word + config["checkpoint"]
-    config["checkpoint_dir"] = out_dir
+    config["checkpoint_path"] = os.path.join(config["checkpoint_dir"], out_dir)
 
     hyprparams = ModelHyperparams(config)
 

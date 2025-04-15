@@ -61,5 +61,5 @@ def train_model(model, dataloader, optimizer, criterion, config):
         avg_loss = running_loss / len(dataloader)
         print(f"Epoch {epoch+1}, Loss: {avg_loss:.4f}")
         os.makedirs("checkpoints", exist_ok=True)
-        torch.save(model.state_dict(), config["checkpoint_dir"])
+        torch.save(model.state_dict(), config["checkpoint_path"])
 
