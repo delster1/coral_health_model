@@ -2,7 +2,7 @@ img_dir: data/aug_images-nonfluoro
 mask_dir: data/aug_masks-nonfluoro
 grayscale: false
 augment: true
-checkpoint_folder: checkpoints
+checkpoint_dir: checkpoints
 checkpoint: non_flouro.pt
 batch_size: 10
 num_epochs: 15
