@@ -3,4 +3,9 @@ mask_dir: data/aug_masks-nonfluoro
 grayscale: false
 augment: true
 checkpoint: checkpoints/non_fluoro.pt
+batch_size: 10
+num_epochs: 15
+lr: 1e-3
+weight_decay: 1e-5
+calculate_weights: false
 

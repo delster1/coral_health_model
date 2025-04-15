@@ -18,13 +18,13 @@ from dataset.coral_dataset import CoralDataset
 
 
 class ModelHyperparams:
-    def __init__(self):
-        self.lr = 1e-3
-        self.batch_size = 10
-        self.num_epochs = 15
+    def __init__(self, config):
+        self.lr = float(config["lr"])
+        self.batch_size = int(config["batch_size"])
+        self.num_epochs = int(config["num_epochs"])
         self.ignore_index = 255
         self.class_weights = torch.tensor([1.0, 1.5, 2.0])
-        self.weight_decay = 1e-5
+        self.weight_decay = float(config["weight_decay"])
 
 
 def parse_args():
@@ -42,10 +42,10 @@ def main():
     args = parse_args()
     print(args)
 
-    hyprparams = ModelHyperparams()
     config = load_config(args.config)
+    hyprparams = ModelHyperparams(config)
 
-    print("HELLOOO")
+    ic(f"Running Model with config:\n{config}")
     dataset = CoralDataset(
         img_dir=config["img_dir"],
         mask_dir=config["mask_dir"],
@@ -60,15 +60,19 @@ def main():
 
     model = UNet(in_channels=in_channels).to(device)
     # ic(model)
+
     optimizer = torch.optim.Adam(
         model.parameters(), lr=hyprparams.lr, weight_decay=hyprparams.weight_decay)
-    class_counts = get_class_frequencies(dataset.mask_dir, num_classes=3)
-    hyprparams.class_weights = compute_class_weights(class_counts)
+
+    if config["calculate_weights"] == True:
+
+        class_counts = get_class_frequencies(dataset.mask_dir, num_classes=3)
+        hyprparams.class_weights = compute_class_weights(class_counts)
 
     print(hyprparams.class_weights)
 
     criterion = nn.CrossEntropyLoss(
-        ignore_index=255, weight=hyprparams.class_weights.to(device))
+        ignore_index=255, weight=hyprparams.class_weights if config["calculate_weights"] == True else None)
     train_model(model, dataloader, optimizer, criterion, config)
     for i in range(10):
         num = random.randint(1, len(dataset))
