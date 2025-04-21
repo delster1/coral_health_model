@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from skimage import io, filters, color
 from skimage.segmentation import watershed
 from skimage.io import imread
-from utils.utils import generate_mask_and_label, get_coral_image, rgba2rgb_safe
+from utils.utils import get_mask, get_coral_image, rgba2rgb_safe
 
 
 class CoralDataset(Dataset):
@@ -27,7 +27,7 @@ class CoralDataset(Dataset):
 
     def __getitem__(self, idx):
         img_path = os.path.join(self.img_dir, self.files[idx])
-        ic(img_path)
+        # ic(img_path)
 
         if self.grayscale:
             img = imread(img_path, as_gray=True)  # shape: (H, W)
@@ -38,11 +38,16 @@ class CoralDataset(Dataset):
                 img = rgba2rgb_safe(img)
             img = torch.from_numpy(img).float().permute(2, 0, 1) / 255.0  # (C, H, W)
 
-        mask = generate_mask_and_label(self.mask_dir, idx)
+        mask = get_mask(self.mask_dir, idx)
+        segmented_coral = Image.open(img_path).convert("L")  # or "RGB" if needed
+        background = np.array(segmented_coral)
 
-        ic("img stats:", img.min().item(), img.max().item(), img.mean().item())
-        ic("img shape: ", img.shape)
-        ic("mask shape: ", mask.shape)
+# Only modify annotated pixels, keep coral structure for others
+        mask[background == 0] = 255
+
+        # ic("img stats:", img.min().item(), img.max().item(), img.mean().item())
+        # ic("img shape: ", img.shape)
+        # ic("mask shape: ", mask.shape)
 
         if self.augment:
             if random.random() > 0.5:
@@ -65,4 +70,3 @@ class CoralDataset(Dataset):
 # Create a dataset instance and data loader
 dataset = CoralDataset('data/images-flouro', 'data/masks-flouro')
 dataloader = DataLoader(dataset, batch_size=10, shuffle=True)
-

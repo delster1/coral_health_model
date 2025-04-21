@@ -8,16 +8,16 @@ from PIL import Image
 from tqdm import tqdm
 import numpy as np
 from dataset.coral_dataset import get_coral_image
-from utils.utils import generate_mask_and_label, rgba2rgb_safe
+from utils.utils import get_mask, rgba2rgb_safe
 
-AUGMENT = False
+AUGMENT = True
 # ---------------- Settings ---------------- #
 IMG_DIR = "data/images-flouro"
 MASK_DIR = "data/masks-flouro"
 OUT_IMG_DIR = "data/aug_images-flouro"
 OUT_MASK_DIR = "data/aug_masks-flouro"
 N_AUGS = 5  # How many augmentations per image?
-N_IMAGES = os.listdir(IMG_DIR)
+N_IMAGES = sorted(os.listdir(IMG_DIR))
 
 os.makedirs(OUT_IMG_DIR, exist_ok=True)
 os.makedirs(OUT_MASK_DIR, exist_ok=True)
@@ -35,25 +35,32 @@ def save_image(img_tensor, save_name, out_img_dir):
     img_pil = TF.to_pil_image(img_tensor)
     img_pil.save(os.path.join(out_img_dir, save_name))
 
-def augment_image(img_tensor):
+def augment_image_and_mask(img_tensor, mask_tensor):
     img = img_tensor.clone()
+    mask = mask_tensor.clone()
     if random.random() > 0.5:
+        mask = TF.hflip(mask)
         img = TF.hflip(img)
     if random.random() > 0.5:
+        mask = TF.vflip(mask)
         img = TF.vflip(img)
     if random.random() > 0.5:
         angle = random.uniform(-30, 30)
+        mask = mask.unsqueeze(0)
+        mask = TF.rotate(mask, angle, interpolation=InterpolationMode.NEAREST)
+        mask = mask.squeeze(0)
         img = TF.rotate(img, angle, interpolation=InterpolationMode.BILINEAR)
-    return img
+    return img, mask
 
 
 # ---------------- Mask Functions ---------------- #
 def load_mask(mask_dir, idx):
-    mask_tensor = generate_mask_and_label(mask_dir, idx)
+    mask_tensor = get_mask(mask_dir, idx)
     return mask_tensor
 
 def save_mask(mask_tensor, save_name, out_mask_dir):
-    mask_pil = Image.fromarray(mask_tensor.numpy().astype(np.uint8))
+    mask_tensor = mask_tensor.to(torch.uint8)
+    mask_pil = TF.to_pil_image(mask_tensor)
     mask_pil.save(os.path.join(out_mask_dir, save_name))
 
 def augment_mask(mask_tensor):
@@ -75,6 +82,7 @@ def process_single_image_mask_pair(idx, n_augs=N_AUGS):
     img_path = os.path.join(IMG_DIR, N_IMAGES[idx])
     img = imread(img_path)
     mask = load_mask(MASK_DIR, idx)
+    img = load_image(IMG_DIR, idx)
 
     # Save original
     base_name = f"{idx:04d}_orig.png"
@@ -82,8 +90,7 @@ def process_single_image_mask_pair(idx, n_augs=N_AUGS):
     save_mask(mask, base_name, OUT_MASK_DIR)
     if AUGMENT == True:
         for aug_idx in range(n_augs):
-            img_aug = augment_image(img)
-            mask_aug = augment_mask(mask)
+            img_aug, mask_aug = augment_image_and_mask(img, mask)
 
             aug_name = f"{idx:04d}_aug{aug_idx+1}.png"
             save_image(img_aug, aug_name, OUT_IMG_DIR)

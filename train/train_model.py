@@ -12,7 +12,7 @@ num_classes = 3  # e.g., bleached, healing, dead (exclude 255 for ignore)
 ignore_index = 255
 
 # Loss and optimizer
-criterion = nn.CrossEntropyLoss(ignore_index=ignore_index)
+
 
 def train_model(model, dataloader, optimizer, criterion, config):
     '''
@@ -22,32 +22,35 @@ def train_model(model, dataloader, optimizer, criterion, config):
         H - Height
         W - Width
     '''
+    total_epochs = 0
 
-    if(os.path.exists(config["checkpoint_path"])):
-        model.load_state_dict(torch.load(config["checkpoint_path"]))
+    if (os.path.exists(config["checkpoint_path"])):
+        checkpoint = torch.load(config["checkpoint_path"])
+        model.load_state_dict(checkpoint["model_state_dict"])
+        optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
 
+        print(f"Loaded from checkpoint Epoch # {checkpoint["epoch"]}")
+
+        total_epochs = checkpoint["epoch"]
     outputs = None
-    num_epochs = 90
+    num_epochs = config["num_epochs"]
     for epoch in range(num_epochs):
-        ic(model.train())
+        # ic(model.train())
         running_loss = 0.0
 
         for images, masks in tqdm(dataloader, desc=f"Epoch {epoch+1}/{num_epochs}"):
             images = images.to(device)                # Shape: (B, 3, H, W)
-            unique_vals = torch.unique(masks)
-            print("Mask Values: ", unique_vals)
             masks = masks.to(device).long()           # Shape: (B, H, W)
 
             # Forward
             outputs = model(images)                   # Shape: (B, C, H, W)
-            with torch.no_grad():
-                ic("output stats:", outputs.min().item(), outputs.max().item(), outputs.mean().item())
-            preds = torch.argmax(outputs, dim=1)
-
-            plt.imshow(preds[0].cpu().numpy(), cmap='viridis')
+            # with torch.no_grad():
+            #     ic("output stats:", outputs.min().item(),
+            #        outputs.max().item(), outputs.mean().item())
 
             # Loss
             masks = masks.squeeze(1).long()
+
             loss = criterion(outputs, masks)
 
             # Backward and optimize
@@ -57,9 +60,12 @@ def train_model(model, dataloader, optimizer, criterion, config):
 
             running_loss += loss.item()
 
-
         avg_loss = running_loss / len(dataloader)
         print(f"Epoch {epoch+1}, Loss: {avg_loss:.4f}")
         os.makedirs("checkpoints", exist_ok=True)
-        torch.save(model.state_dict(), config["checkpoint_path"])
-
+        save_dict = {'epoch': total_epochs + epoch,
+                     'model_state_dict': model.state_dict(),
+                     'optimizer_state_dict': optimizer.state_dict(),
+                     'loss': loss, }
+        print(f"Saved model to {config["checkpoint_path"]}, Total Epochs: {save_dict['epoch']}")
+        torch.save(save_dict, config["checkpoint_path"])

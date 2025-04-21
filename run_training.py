@@ -44,10 +44,11 @@ def main():
 
     config = load_config(args.config)
 
-    first_word = "grayscale-" if config["grayscale"] else "full-color-"
-    out_dir = first_word + config["checkpoint"]
+    first_word = "grayscale-" if config["grayscale"] is True else "full-color-"
+    second_word = os.path.basename(config["img_dir"])
+    out_dir = first_word + second_word + '-' + config["checkpoint"]
     config["checkpoint_path"] = os.path.join(config["checkpoint_dir"], out_dir)
-
+    
     hyprparams = ModelHyperparams(config)
 
     ic(f"Running Model with config:\n{config}")
@@ -61,7 +62,8 @@ def main():
 
     dataloader = DataLoader(dataset, hyprparams.batch_size, shuffle=True)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    in_channels = 1 if dataset.grayscale else 3
+    in_channels = 1 if dataset.grayscale is True else 3
+    print(in_channels)
 
     model = UNet(in_channels=in_channels).to(device)
     # ic(model)
@@ -77,10 +79,11 @@ def main():
     print(hyprparams.class_weights)
 
     criterion = nn.CrossEntropyLoss(
-        ignore_index=255, weight=hyprparams.class_weights if config["calculate_weights"] == True else None)
+        ignore_index=255, weight=hyprparams.class_weights.to(device) if config["calculate_weights"] == True else None)
+
     train_model(model, dataloader, optimizer, criterion, config)
     for i in range(10):
-        num = random.randint(1, len(dataset))
+        num = random.randint(1, len(dataset) - 1)
         visualize_prediction(model, dataset, device, num)
 
 

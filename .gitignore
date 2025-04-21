@@ -1,1 +1,7 @@
+data/
+clips/
+include/
+outputs/
+__pycache__/
+venv/
 

@@ -5,8 +5,8 @@ augment: true
 checkpoint_dir: checkpoints
 checkpoint: flouro.pt
 batch_size: 10
-num_epochs: 15
+num_epochs: 30
 lr: 1e-3
 weight_decay: 1e-5
-calculate_weights: false
+calculate_weights: true
 

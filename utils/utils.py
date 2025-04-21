@@ -12,11 +12,11 @@ def clear_output_folder(out_dir):
         os.mkdir(out_dir)
         return
     for filename in os.listdir(out_dir):
-        file_path = os.path.join(directory, filename)
+        file_path = os.path.join(out_dir, filename)
         if os.path.isfile(file_path):
             os.remove(file_path)
 def save_prediction_mask(mask_tensor, save_path):
-    mask_np = mask_tensor.cpu().numpy().astype(np.uint8)
+    mask_np = mask_tensor.astype(np.uint8)
     mask_img = Image.fromarray(mask_np)
     mask_img.save(save_path)
 
@@ -71,7 +71,7 @@ def get_size(start_path):
                 total_size += 1
 
     return total_size
-def generate_mask_and_label(mask_dir, idx):
+def get_mask(mask_dir, idx):
     '''
     Takes a painted image and returns a mask with integer labels:
     - 0 = red (dead)
@@ -86,12 +86,69 @@ def generate_mask_and_label(mask_dir, idx):
     if masked.shape[-1] == 4:
         masked = rgba2rgb_safe(masked)
 
+    # Convert to torch tensor
     mask = torch.from_numpy(masked).long()
 
+    # If RGB image, convert to grayscale/intensity map
     if mask.ndim == 3:
-        mask = mask.squeeze(-1)  # Remove channel dimension if present
-    return mask
+        # Identify black pixels: R=G=B=0
+        black_pixels = (mask == 0).all(dim=-1)
 
+        # Convert RGB to grayscale-like integer (just pick one channel here)
+        mask = mask[..., 0]  # assuming R=G=B so any channel works
+
+        # Set black pixels to 255
+        mask[black_pixels] = 255
+
+    # Set out-of-bound class IDs (>2) to 255 (ignore index)
+    mask[(mask > 2) & (mask != 255)] = 255
+
+    return mask
+def generate_mask_and_labelv2(mask_path):
+    '''
+    Takes a painted image and returns a mask with integer labels:
+    - 0 = red (dead)
+    - 1 = yellow (healing)
+    - 2 = blue (bleached)
+    Ignores near-black pixels.
+    '''
+    masked = imread(mask_path)
+
+    if masked.shape[-1] == 4:
+        masked = masked[:, :, :3]  # strip alpha
+
+    H, W, _ = masked.shape
+    target_mask = np.full((H, W), 255, dtype=np.uint8)
+
+    # Target RGB colors
+    red    = np.array([195, 60, 60])
+    yellow = np.array([195, 195, 60])
+    blue   = np.array([60, 60, 195])
+
+    # Reshape for vectorized distance computation
+    flat_img = masked.reshape(-1, 3)
+
+    # Compute L2 distance to each class color
+    dist_red    = np.linalg.norm(flat_img - red, axis=1)
+    dist_yellow = np.linalg.norm(flat_img - yellow, axis=1)
+    dist_blue   = np.linalg.norm(flat_img - blue, axis=1)
+
+    # Stack and get argmin for closest color
+    distances = np.stack([dist_red, dist_yellow, dist_blue], axis=1)
+    min_indices = np.argmin(distances, axis=1)
+
+    # # Optional: only assign if pixel isn’t close to black
+    brightness = np.linalg.norm(flat_img, axis=1)
+    not_black = brightness > 0  # tweak threshold as needed
+
+    # Fill mask
+    target_mask_flat = target_mask.flatten()
+    target_mask_flat[not_black] = min_indices[not_black]
+    target_mask = target_mask_flat.reshape(H, W)
+
+    assert (target_mask != 255).any(), "No labeled pixels found — mask may be too dark or empty!"
+    target_mask = remove_small_regions(target_mask)
+    return target_mask
 
 def get_class_frequencies(mask_dir, num_classes=3, ignore_index=255):
     class_counts = np.zeros(num_classes, dtype=np.int64)
