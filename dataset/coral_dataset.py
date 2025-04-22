@@ -42,7 +42,7 @@ class CoralDataset(Dataset):
         segmented_coral = Image.open(img_path).convert("L")  # or "RGB" if needed
         background = np.array(segmented_coral)
 
-# Only modify annotated pixels, keep coral structure for others
+# only modify annotated pixels, keep coral structure for others
         mask[background == 0] = 255
 
         # ic("img stats:", img.min().item(), img.max().item(), img.mean().item())

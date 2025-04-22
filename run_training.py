@@ -12,6 +12,7 @@ from PIL import Image
 import random
 from train.train_model import train_model
 from visualize_predictions import visualize_prediction
+from torch.utils.data import random_split
 from models.segmentation_model import UNet
 from utils.utils import *
 from dataset.coral_dataset import CoralDataset
@@ -52,7 +53,7 @@ def main():
     hyprparams = ModelHyperparams(config)
 
     ic(f"Running Model with config:\n{config}")
-    dataset = CoralDataset(
+    train_dataset = CoralDataset(
         img_dir=config["img_dir"],
         mask_dir=config["mask_dir"],
         augment=config["augment"],
@@ -60,9 +61,16 @@ def main():
 
     )
 
-    dataloader = DataLoader(dataset, hyprparams.batch_size, shuffle=True)
+    total_size = len(train_dataset)
+    train_size = int(0.9 * total_size)
+    val_size = total_size - train_size
+
+    train_dataset, val_dataset = random_split(train_dataset, [train_size, val_size])
+
+    train_dataloader = DataLoader(train_dataset, hyprparams.batch_size, shuffle=True)
+    val_dataloader = DataLoader(val_dataset, hyprparams.batch_size, shuffle=True)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    in_channels = 1 if dataset.grayscale is True else 3
+    in_channels = 1 if train_dataset.grayscale is True else 3
     print(in_channels)
 
     model = UNet(in_channels=in_channels).to(device)
@@ -73,7 +81,7 @@ def main():
 
     if config["calculate_weights"] == True:
 
-        class_counts = get_class_frequencies(dataset.mask_dir, num_classes=3)
+        class_counts = get_class_frequencies(train_dataset.mask_dir, num_classes=3)
         hyprparams.class_weights = compute_class_weights(class_counts)
 
     print(hyprparams.class_weights)
@@ -81,10 +89,10 @@ def main():
     criterion = nn.CrossEntropyLoss(
         ignore_index=255, weight=hyprparams.class_weights.to(device) if config["calculate_weights"] == True else None)
 
-    train_model(model, dataloader, optimizer, criterion, config)
+    train_model(model, train_dataloader, val_dataloader, optimizer, criterion, config)
     for i in range(10):
-        num = random.randint(1, len(dataset) - 1)
-        visualize_prediction(model, dataset, device, num)
+        num = random.randint(1, len(train_dataset) - 1)
+        visualize_prediction(model, train_dataset, device, num)
 
 
 main()

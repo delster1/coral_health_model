@@ -14,7 +14,7 @@ ignore_index = 255
 # Loss and optimizer
 
 
-def train_model(model, dataloader, optimizer, criterion, config):
+def train_model(model, training_dataloader,val_dataloader, optimizer, criterion, config):
     '''
     Tensor Shape: 
         B - Batch size - # images at once
@@ -23,6 +23,8 @@ def train_model(model, dataloader, optimizer, criterion, config):
         W - Width
     '''
     total_epochs = 0
+    train_losses = []
+    val_losses = []
 
     if (os.path.exists(config["checkpoint_path"])):
         checkpoint = torch.load(config["checkpoint_path"])
@@ -35,25 +37,16 @@ def train_model(model, dataloader, optimizer, criterion, config):
     outputs = None
     num_epochs = config["num_epochs"]
     for epoch in range(num_epochs):
-        # ic(model.train())
+        model.train()
         running_loss = 0.0
 
         for images, masks in tqdm(dataloader, desc=f"Epoch {epoch+1}/{num_epochs}"):
             images = images.to(device)                # Shape: (B, 3, H, W)
             masks = masks.to(device).long()           # Shape: (B, H, W)
 
-            # Forward
             outputs = model(images)                   # Shape: (B, C, H, W)
-            # with torch.no_grad():
-            #     ic("output stats:", outputs.min().item(),
-            #        outputs.max().item(), outputs.mean().item())
-
-            # Loss
             masks = masks.squeeze(1).long()
-
             loss = criterion(outputs, masks)
-
-            # Backward and optimize
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -61,11 +54,26 @@ def train_model(model, dataloader, optimizer, criterion, config):
             running_loss += loss.item()
 
         avg_loss = running_loss / len(dataloader)
+        train_losses.append(avg_loss)
+
+        model.eval()
+        running_val_loss = 0.0
+        with torch.no_grad():
+            for images, masks in val_dataloader:
+                images, masks = images.to(device), masks.to(device)
+                outputs = model(images)
+                loss = criterion(outputs, masks)
+                running_val_loss += loss.item()
+
+        avg_val_loss = running_val_loss / len(val_loader)
+        val_losses.append(avg_val_loss)
+
         print(f"Epoch {epoch+1}, Loss: {avg_loss:.4f}")
         os.makedirs("checkpoints", exist_ok=True)
         save_dict = {'epoch': total_epochs + epoch,
                      'model_state_dict': model.state_dict(),
                      'optimizer_state_dict': optimizer.state_dict(),
                      'loss': loss, }
-        print(f"Saved model to {config["checkpoint_path"]}, Total Epochs: {save_dict['epoch']}")
+        print(f"Saved model to {config["checkpoint_path"]}, Total Epochs: {
+            save_dict['epoch']}")
         torch.save(save_dict, config["checkpoint_path"])
