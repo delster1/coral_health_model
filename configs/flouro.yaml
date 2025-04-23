@@ -1,11 +1,11 @@
-img_dir: data/aug_images-flouro
-mask_dir: data/aug_masks-flouro
+img_dir: data/images-flouro
+mask_dir: data/masks-flouro
 grayscale: false
 augment: true
 checkpoint_dir: checkpoints
 checkpoint: flouro.pt
 batch_size: 10
-num_epochs: 30
+num_epochs: 10
 lr: 1e-3
 weight_decay: 1e-5
 calculate_weights: true

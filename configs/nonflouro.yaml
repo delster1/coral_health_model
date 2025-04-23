@@ -1,11 +1,11 @@
-img_dir: data/aug_images-nonfluoro
-mask_dir: data/aug_masks-nonfluoro
+img_dir: data/aug_images-nonflouro
+mask_dir: data/aug_masks-nonflouro
 grayscale: false
 augment: true
 checkpoint_dir: checkpoints
 checkpoint: non_flouro.pt
 batch_size: 10
-num_epochs: 15
+num_epochs: 1
 lr: 1e-3
 weight_decay: 1e-5
 calculate_weights: false

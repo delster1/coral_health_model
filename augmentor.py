@@ -8,14 +8,14 @@ from PIL import Image
 from tqdm import tqdm
 import numpy as np
 from dataset.coral_dataset import get_coral_image
-from utils.utils import get_mask, rgba2rgb_safe
+from utils.utils import get_mask, rgba2rgb_safe, generate_mask_and_labelv2
 
 AUGMENT = True
 # ---------------- Settings ---------------- #
-IMG_DIR = "data/images-flouro"
-MASK_DIR = "data/masks-flouro"
-OUT_IMG_DIR = "data/aug_images-flouro"
-OUT_MASK_DIR = "data/aug_masks-flouro"
+IMG_DIR = "data/images-nonflouro"
+MASK_DIR = "data/masks-nonflouro"
+OUT_IMG_DIR = "data/aug_images-nonflouro"
+OUT_MASK_DIR = "data/aug_masks-nonflouro"
 N_AUGS = 5  # How many augmentations per image?
 N_IMAGES = sorted(os.listdir(IMG_DIR))
 
@@ -55,8 +55,16 @@ def augment_image_and_mask(img_tensor, mask_tensor):
 
 # ---------------- Mask Functions ---------------- #
 def load_mask(mask_dir, idx):
+    files = sorted(os.listdir(mask_dir))
+    mask_path = os.path.join(mask_dir, files[idx])
     mask_tensor = get_mask(mask_dir, idx)
     return mask_tensor
+
+def load_maskv2(mask_dir, idx):
+    files = sorted(os.listdir(mask_dir))
+    mask_path = os.path.join(mask_dir, files[idx])
+    mask_tensor = generate_mask_and_labelv2(mask_path)
+    return torch.from_numpy(mask_tensor)
 
 def save_mask(mask_tensor, save_name, out_mask_dir):
     mask_tensor = mask_tensor.to(torch.uint8)

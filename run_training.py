@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import random
 from train.train_model import train_model
-from visualize_predictions import visualize_prediction
+from visualize_predictions import save_results, visualize_prediction
 from torch.utils.data import random_split
 from models.segmentation_model import UNet
 from utils.utils import *
@@ -61,16 +61,22 @@ def main():
 
     )
 
+    in_channels = 1 if train_dataset.grayscale is True else 3
+
     total_size = len(train_dataset)
     train_size = int(0.9 * total_size)
     val_size = total_size - train_size
+
+    if config["calculate_weights"] == True:
+
+        class_counts = get_class_frequencies(train_dataset.mask_dir, num_classes=3)
+        hyprparams.class_weights = compute_class_weights(class_counts)
 
     train_dataset, val_dataset = random_split(train_dataset, [train_size, val_size])
 
     train_dataloader = DataLoader(train_dataset, hyprparams.batch_size, shuffle=True)
     val_dataloader = DataLoader(val_dataset, hyprparams.batch_size, shuffle=True)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    in_channels = 1 if train_dataset.grayscale is True else 3
     print(in_channels)
 
     model = UNet(in_channels=in_channels).to(device)
@@ -79,20 +85,20 @@ def main():
     optimizer = torch.optim.Adam(
         model.parameters(), lr=hyprparams.lr, weight_decay=hyprparams.weight_decay)
 
-    if config["calculate_weights"] == True:
-
-        class_counts = get_class_frequencies(train_dataset.mask_dir, num_classes=3)
-        hyprparams.class_weights = compute_class_weights(class_counts)
 
     print(hyprparams.class_weights)
 
     criterion = nn.CrossEntropyLoss(
         ignore_index=255, weight=hyprparams.class_weights.to(device) if config["calculate_weights"] == True else None)
 
-    train_model(model, train_dataloader, val_dataloader, optimizer, criterion, config)
-    for i in range(10):
-        num = random.randint(1, len(train_dataset) - 1)
-        visualize_prediction(model, train_dataset, device, num)
+    avg_accuracy = 0
+    num_visualizations = len(train_dataset) - 1
+    train_losses, val_losses = train_model(model, train_dataloader, val_dataloader, optimizer, criterion, config)
+    save_results(model, train_dataset, val_dataset, device, train_losses, val_losses)
+    for i in range(num_visualizations):
+        num = i
+        avg_accuracy += visualize_prediction(model, train_dataset, device, num, train_losses, val_losses)
+    print(f"Average Accuracy: {avg_accuracy/num_visualizations}")
 
 
 main()

@@ -8,7 +8,7 @@ import os
 
 def show_mask(mask_tensor):
 
-    plt.imshow(mask_tensor.numpy(), cmap='tab10')  # or 'nipy_spectral'
+    plt.imshow(mask_tensor.numpy(), cmap='tab10', vmin=0, vmax=3)  # or 'nipy_spectral'
     plt.colorbar()
     plt.title("Mask Visualization")
     plt.show()

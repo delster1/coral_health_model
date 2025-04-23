@@ -40,7 +40,7 @@ def train_model(model, training_dataloader,val_dataloader, optimizer, criterion,
         model.train()
         running_loss = 0.0
 
-        for images, masks in tqdm(dataloader, desc=f"Epoch {epoch+1}/{num_epochs}"):
+        for images, masks in tqdm(training_dataloader, desc=f"Epoch {epoch+1}/{num_epochs}"):
             images = images.to(device)                # Shape: (B, 3, H, W)
             masks = masks.to(device).long()           # Shape: (B, H, W)
 
@@ -53,7 +53,7 @@ def train_model(model, training_dataloader,val_dataloader, optimizer, criterion,
 
             running_loss += loss.item()
 
-        avg_loss = running_loss / len(dataloader)
+        avg_loss = running_loss / len(training_dataloader)
         train_losses.append(avg_loss)
 
         model.eval()
@@ -65,7 +65,7 @@ def train_model(model, training_dataloader,val_dataloader, optimizer, criterion,
                 loss = criterion(outputs, masks)
                 running_val_loss += loss.item()
 
-        avg_val_loss = running_val_loss / len(val_loader)
+        avg_val_loss = running_val_loss / len(val_dataloader)
         val_losses.append(avg_val_loss)
 
         print(f"Epoch {epoch+1}, Loss: {avg_loss:.4f}")
@@ -77,3 +77,5 @@ def train_model(model, training_dataloader,val_dataloader, optimizer, criterion,
         print(f"Saved model to {config["checkpoint_path"]}, Total Epochs: {
             save_dict['epoch']}")
         torch.save(save_dict, config["checkpoint_path"])
+
+        return train_losses, val_losses
