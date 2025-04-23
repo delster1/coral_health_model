@@ -75,5 +75,14 @@ pip install -r requirements.txt
 ### Usage
 To train the model, run the model, and visualize predictions:
 ```bash
-python3 run_training.py
+python3 run_training --config=configs/flouro.yaml
 ```
+
+## Sources
+Ronneberger, O., Fischer, P., & Brox, T. (2015). U-Net: Convolutional networks for biomedical image segmentation [arXiv preprint arXiv:1505.04597]. https://arxiv.org/abs/1505.04597
+
+CodezUp. (2020). Image segmentation using U-Net in PyTorch. https://codezup.com/a-hands-on-guide-to-image-segmentation-using-u-net-in-pytorch/
+
+PyTorch. (n.d.). PyTorch documentation (stable). https://pytorch.org/docs/stable/index.html
+
+Wikipedia contributors. (2023, March 30). Image segmentation. Wikipedia. https://en.wikipedia.org/wiki/Image_segmentation
