@@ -1,5 +1,15 @@
 # Coral Health Model
 
+## Implementation
+Using U-Net's Segmentation Model to perform pixel-wise classification of coral images to identify regions as healthy, healing, or bleached.
+
+We have four options for training the model, which are as follows:
+1. Training with flouro images processed in grayscale.
+2. Training with flouro images processed in full-color.
+3. Training with non-flouro images processed in grayscale.
+4. Training with non-flouro images processed in full-color.
+
+We aim to determine a model's ability to identify regions of coral as healing, healthy, or bleached.
 ## Project Structure
 coral_health_model/
 - data/ - all images for training
@@ -12,16 +22,6 @@ coral_health_model/
 - train/ - scripts for training 
 - utils/ - preprocessing - create training data & visualize output
 
-## Implementation
-Using U-Net's Segmentation Model to perform pixel-wise classification of coral images to identify regions as healthy, healing, or bleached.
-
-We have four options for training the model, which are as follows:
-1. Training with flouro images processed in grayscale.
-2. Training with flouro images processed in full-color.
-3. Training with non-flouro images processed in grayscale.
-4. Training with non-flouro images processed in full-color.
-
-We aim to determine a model's ability to identify regions of coral as healing, healthy, or bleached.
 
 ## Training 
 
